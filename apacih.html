@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>EduPulse · Jurnal & Ujian Profesional</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "Inter", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet" />
+    <style>
+        /* ---------- VARIABLES & RESET ---------- */
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: #151b2c;
+            --bg-elevated: #1e2642;
+            --bg-input: #0b0f19;
+            --border-color: #2a3457;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --shadow-color: 0 0 0 1px rgba(34, 211, 238, 0.1);
+            --scrollbar-track: #0b0f19;
+            --scrollbar-thumb: #2a3457;
+            --modal-backdrop: rgba(0, 0, 0, 0.8);
+            --toast-bg: #1e2642;
+        }
+        [data-theme="light"] {
+            --bg-base: #f1f5f9;
+            --bg-surface: #ffffff;
+            --bg-elevated: #f8fafc;
+            --bg-input: #f1f5f9;
+            --border-color: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --shadow-color: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --scrollbar-track: #e2e8f0;
+            --scrollbar-thumb: #94a3b8;
+            --modal-backdrop: rgba(0, 0, 0, 0.5);
+            --toast-bg: #ffffff;
+        }
+
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 12px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .serif-title {
+            font-family: "Playfair Display", Georgia, serif;
+        }
+
+        /* Glassmorphism utilities */
+        .glass {
+            background: var(--bg-surface);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+        }
+
+        .glass-light {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        [data-theme="light"] .glass-light {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        /* Card Hover */
+        .card-hover {
+            transition: transform 0.25s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.5);
+        }
+        [data-theme="light"] .card-hover:hover {
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal Animation */
+        .modal-enter {
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+        }
+        .modal-enter-active {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Burger Slide */
+        .burger-slide {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .burger-slide.open {
+            transform: translateX(0);
+        }
+
+        /* Exam Option */
+        .exam-option-input:checked+.exam-option-label {
+            border-color: #22d3ee !important;
+            background: rgba(34, 211, 238, 0.08) !important;
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.25);
+        }
+        .exam-option-label.correct-highlight {
+            border-color: #34d399 !important;
+            background: rgba(52, 211, 153, 0.12) !important;
+        }
+        .exam-option-label.wrong-highlight {
+            border-color: #f87171 !important;
+            background: rgba(248, 113, 113, 0.12) !important;
+        }
+
+        /* Timer Pulse */
+        @keyframes pulse-warning {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
+        .timer-warning {
+            animation: pulse-warning 0.8s ease-in-out infinite;
+        }
+
+        /* Toast */
+        #toast {
+            background: var(--toast-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Reading mode */
+        body.reading-mode nav,
+        body.reading-mode footer,
+        body.reading-mode #bottom-nav,
+        body.reading-mode #burger-menu,
+        body.reading-mode #modal-login,
+        body.reading-mode #modal-register,
+        body.reading-mode #modal-profile,
+        body.reading-mode #modal-forgot-password,
+        body.reading-mode #modal-buat-ujian,
+        body.reading-mode #modal-kerjakan-ujian,
+        body.reading-mode #modal-hasil-ujian,
+        body.reading-mode #modal-tulis {
+            display: none !important;
+        }
+        body.reading-mode #modal-article-detail {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            z-index: 999;
+            background: var(--bg-base);
+        }
+        body.reading-mode #modal-content-article-detail {
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            padding: 2rem;
+            background: var(--bg-base);
+        }
+        body.reading-mode #article-detail-content {
+            font-size: 1.1rem;
+            line-height: 1.9;
+        }
+
+        /* Dropdown */
+        #profile-dropdown {
+            transform-origin: top right;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        #profile-dropdown:not(.hidden) {
+            animation: slideDown 0.2s ease;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Password toggle */
+        .pw-toggle-btn {
+            user-select: none;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .pw-toggle-btn:hover {
+            color: var(--text-secondary);
+            background: rgba(100, 116, 139, 0.1);
+        }
+        .input-group-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-group-wrapper input {
+            padding-right: 44px;
+        }
+        .input-group-wrapper .pw-toggle-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Global input styling */
+        .input-custom {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            width: 100%;
+            outline: none;
+        }
+        .input-custom:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+        }
+        .input-custom::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Scrollable modal body */
+        .modal-scroll {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .modal-scroll::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        /* Hero gradient orbs */
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        [data-theme="light"] .hero-orb {
+            opacity: 0.15;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="sticky top-0 z-50 px-4 sm:px-6 py-3 glass border-b border-[var(--border-color)] bg-[var(--bg-surface)]/80 backdrop-blur-xl">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <!-- Left: Logo + Hamburger -->
+            <div class="flex items-center gap-3">
+                <button id="burger-button" onclick="toggleBurgerMenu()" class="md:hidden text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-2 rounded-xl hover:bg-[var(--border-color)]/30 transition-all">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                </button>
+                <a href="#" class="flex items-center gap-2.5 group shrink-0">
+                    <span class="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">E</span>
+                    <span class="text-lg font-bold tracking-tight text-[var(--text-primary)] hidden sm:inline">Edu<span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Pulse.</span></span>
+                </a>
+            </div>
+
+            <!-- Center: Nav Pills (Desktop) -->
+            <div class="hidden md:flex items-center gap-1 bg-[var(--bg-input)]/60 p-1 rounded-full border border-[var(--border-color)]">
+                <button id="nav-artikel" onclick="switchTab('artikel')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all data-[active=true]:bg-gradient-to-r data-[active=true]:from-cyan-500 data-[active=true]:to-blue-600 data-[active=true]:text-white data-[active=true]:shadow-md data-[active=true]:shadow-blue-500/20" data-active="true">📄 Artikel</button>
+                <button id="nav-ujian" onclick="switchTab('ujian')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all data-[active=true]:bg-gradient-to-r data-[active=true]:from-emerald-500 data-[active=true]:to-teal-600 data-[active=true]:text-white data-[active=true]:shadow-md data-[active=true]:shadow-emerald-500/20">📝 Ujian</button>
+                <button id="nav-riwayat" onclick="switchTab('riwayat')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all data-[active=true]:bg-gradient-to-r data-[active=true]:from-violet-500 data-[active=true]:to-purple-600 data-[active=true]:text-white data-[active=true]:shadow-md data-[active=true]:shadow-violet-500/20">📊 Statistik</button>
+            </div>
+
+            <!-- Right: Theme Toggle + Auth -->
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <button onclick="toggleTheme()" class="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border-color)]/30 transition-all" title="Toggle tema">
+                    <span id="theme-icon" class="text-lg">🌙</span>
+                </button>
+
+                <div id="auth-section" class="flex items-center gap-2 relative">
+                    <!-- Belum login -->
+                    <div id="auth-buttons-logged-out" class="flex items-center gap-2">
+                        <button onclick="bukaModalLogin()" class="text-xs font-semibold text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-400/60 px-3 py-1.5 rounded-full transition-all">🔑 Masuk</button>
+                        <button onclick="bukaModalRegister()" class="text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 px-3 py-1.5 rounded-full shadow-md shadow-emerald-500/10 active:scale-95 transition-all hidden sm:block">📝 Daftar</button>
+                    </div>
+
+                    <!-- Sudah login -->
+                    <div id="auth-buttons-logged-in" class="hidden items-center gap-1">
+                        <button onclick="toggleProfileDropdown()" class="text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-input)] border border-[var(--border-color)] px-3 py-1.5 rounded-full flex items-center gap-2 hover:bg-[var(--border-color)]/30 transition-all">
+                            <span class="h-5 w-5 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold">👤</span>
+                            <span id="username-display-text" class="hidden sm:inline max-w-[80px] truncate">User</span>
+                            <span id="admin-badge" class="hidden text-[9px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/30">ADMIN</span>
+                            <span class="text-xs text-[var(--text-muted)]">▾</span>
+                        </button>
+                        <!-- Dropdown -->
+                        <div id="profile-dropdown" class="hidden absolute top-full right-0 mt-2 w-48 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-2xl p-2 z-40">
+                            <button onclick="openProfileModal(); toggleProfileDropdown();" class="w-full text-left text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--border-color)]/30 px-3 py-2 rounded-lg transition-all">👤 Edit Profil</button>
+                            <button onclick="switchTab('riwayat'); toggleProfileDropdown();" class="w-full text-left text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--border-color)]/30 px-3 py-2 rounded-lg transition-all">📊 Lihat Riwayat</button>
+                            <hr class="border-[var(--border-color)] my-2" />
+                            <button onclick="logout(); toggleProfileDropdown();" class="w-full text-left text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-3 py-2 rounded-lg transition-all">🚪 Keluar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Row -->
+        <div id="admin-buttons-row" class="hidden md:flex items-center gap-3 mt-3 pt-3 border-t border-[var(--border-color)]">
+            <div id="admin-buttons" class="hidden items-center gap-2 flex-wrap">
+                <button onclick="bukaModalTambah()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-md shadow-blue-500/10 active:scale-95 transition-all">✍️ Buat Artikel</button>
+                <button onclick="bukaModalBuatUjian()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-md shadow-emerald-500/10 active:scale-95 transition-all">📝 Buat Ujian</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== BURGER MENU (SLIDE) ========== -->
+    <div id="burger-menu" class="fixed top-0 right-0 z-[60] h-full w-72 bg-[var(--bg-surface)] border-l border-[var(--border-color)] shadow-2xl p-6 burger-slide overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h4 class="text-sm font-semibold uppercase tracking-wider text-cyan-400">Menu Akun</h4>
+                <p class="text-xs text-[var(--text-muted)] mt-1">Akses cepat</p>
+            </div>
+            <button onclick="toggleBurgerMenu()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">✕</button>
+        </div>
+        <div id="burger-guest-menu" class="space-y-3">
+            <button onclick="bukaModalLogin(); toggleBurgerMenu();" class="w-full text-left bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl px-4 py-3 text-sm font-semibold text-cyan-400 hover:bg-[var(--border-color)]/30">🔑 Masuk</button>
+            <button onclick="bukaModalRegister(); toggleBurgerMenu();" class="w-full text-left bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:from-emerald-400 hover:to-teal-500">📝 Daftar</button>
+            <div class="mt-4 p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-input)]">
+                <p class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Tampilan</p>
+                <div class="mt-3 grid gap-2">
+                    <button onclick="toggleReadingMode(); toggleBurgerMenu();" class="w-full rounded-xl bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">📖 Mode Baca</button>
+                    <button onclick="setTheme('light'); toggleBurgerMenu();" class="w-full rounded-xl bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">☀️ Tema Terang</button>
+                    <button onclick="setTheme('dark'); toggleBurgerMenu();" class="w-full rounded-xl bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">🌙 Tema Gelap</button>
+                </div>
+            </div>
+        </div>
+        <div id="burger-user-menu" class="hidden space-y-3">
+            <div class="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl p-4">
+                <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Hai, <span id="burger-username-text" class="font-semibold text-[var(--text-primary)]"></span></p>
+                <p class="text-xs text-[var(--text-muted)] mt-2">Kelola profil & statistik.</p>
+            </div>
+            <button onclick="openProfileModal(); toggleBurgerMenu();" class="w-full text-left bg-cyan-500/10 border border-cyan-500/20 rounded-2xl px-4 py-3 text-sm font-semibold text-cyan-400 hover:bg-cyan-500/15">👤 Edit Profil</button>
+            <button onclick="switchTab('riwayat'); toggleBurgerMenu();" class="w-full text-left bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl px-4 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">📊 Statistik Saya</button>
+            <button onclick="logout(); toggleBurgerMenu();" class="w-full text-left bg-rose-500/10 border border-rose-500/20 rounded-2xl px-4 py-3 text-sm font-semibold text-rose-400 hover:bg-rose-500/15">🚪 Keluar</button>
+            <div class="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-input)]">
+                <p class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Tampilan</p>
+                <div class="mt-3 grid gap-2">
+                    <button onclick="toggleReadingMode(); toggleBurgerMenu();" class="w-full rounded-xl bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">📖 Mode Baca</button>
+                    <button onclick="setTheme('light'); toggleBurgerMenu();" class="w-full rounded-xl bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">☀️ Tema Terang</button>
+                    <button onclick="setTheme('dark'); toggleBurgerMenu();" class="w-full rounded-xl bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)]/30">🌙 Tema Gelap</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== HERO ========== -->
+    <header class="relative overflow-hidden border-b border-[var(--border-color)] bg-gradient-to-b from-cyan-950/20 to-transparent py-16 px-6">
+        <div class="hero-orb w-72 h-72 bg-blue-500 -top-20 -right-20"></div>
+        <div class="hero-orb w-96 h-96 bg-cyan-500 bottom-0 left-0 opacity-20"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <span class="text-xs font-bold tracking-widest text-cyan-400 uppercase bg-cyan-500/10 px-4 py-1.5 rounded-full border border-cyan-500/20 inline-block">Ruang Baca Digital</span>
+            <h1 class="serif-title text-4xl md:text-5xl text-[var(--text-primary)] font-semibold mt-5 mb-4 tracking-tight leading-tight">
+                Temukan materi, ujian interaktif, & <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">lacak progres</span> belajarmu.
+            </h1>
+            <p class="text-[var(--text-secondary)] text-base max-w-2xl mx-auto font-light leading-relaxed">
+                Platform jurnal mandiri terintegrasi. Riwayat ujian, statistik, dan filter cerdas tersedia.
+            </p>
+        </div>
+    </header>
+
+    <!-- ========== MAIN ========== -->
+    <main class="max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 pb-28 md:pb-8 flex-grow">
+
+        <!-- ===== BOTTOM NAV (MOBILE) ===== -->
+        <nav id="bottom-nav" class="fixed inset-x-0 bottom-0 z-50 md:hidden border-t border-[var(--border-color)] bg-[var(--bg-surface)]/95 backdrop-blur-xl px-4 py-2" style="padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);">
+            <div class="flex items-center justify-around gap-1">
+                <button id="bottom-nav-artikel" onclick="switchTab('artikel')" class="flex-1 flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 text-[var(--text-secondary)] data-[active=true]:bg-[var(--bg-input)] data-[active=true]:border data-[active=true]:border-[var(--border-color)] data-[active=true]:text-[var(--text-primary)] transition-all" data-active="true"><span class="text-lg">📄</span><span class="text-[10px] font-semibold">Artikel</span></button>
+                <button id="bottom-nav-ujian" onclick="switchTab('ujian')" class="flex-1 flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 text-[var(--text-secondary)] data-[active=true]:bg-[var(--bg-input)] data-[active=true]:border data-[active=true]:border-[var(--border-color)] data-[active=true]:text-[var(--text-primary)] transition-all"><span class="text-lg">📝</span><span class="text-[10px] font-semibold">Ujian</span></button>
+                <button id="bottom-nav-riwayat" onclick="switchTab('riwayat')" class="flex-1 flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 text-[var(--text-secondary)] data-[active=true]:bg-[var(--bg-input)] data-[active=true]:border data-[active=true]:border-[var(--border-color)] data-[active=true]:text-[var(--text-primary)] transition-all"><span class="text-lg">📊</span><span class="text-[10px] font-semibold">Statistik</span></button>
+            </div>
+        </nav>
+
+        <!-- ===== SECTION: ARTIKEL ===== -->
+        <section id="section-artikel">
+            <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-sm font-semibold tracking-wider uppercase text-[var(--text-muted)]">Semua Publikasi</h2>
+                    <span id="article-count" class="bg-[var(--bg-input)] text-[var(--text-secondary)] text-xs px-2.5 py-0.5 rounded-full font-medium border border-[var(--border-color)]">0</span>
+                </div>
+                <button onclick="fetchArticles()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 font-medium transition-all">⟳ Segarkan</button>
+            </div>
+            <div class="mb-5"><input type="text" id="search-artikel" placeholder="🔍 Cari artikel..." oninput="renderArticles()" class="input-custom max-w-md" /></div>
+            <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full text-center py-20 bg-[var(--bg-input)]/40 border border-[var(--border-color)] rounded-2xl">
+                    <div class="inline-block animate-spin rounded-full h-7 w-7 border-2 border-cyan-400 border-r-transparent mb-3"></div>
+                    <p class="text-xs text-[var(--text-muted)] tracking-wide">Memuat artikel...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: UJIAN ===== -->
+        <section id="section-ujian" class="hidden">
+            <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4 mb-4">
+                <div class="flex items-center gap-3"><h2 class="text-sm font-semibold tracking-wider uppercase text-[var(--text-muted)]">Bank Ujian</h2><span id="exam-count" class="bg-[var(--bg-input)] text-[var(--text-secondary)] text-xs px-2.5 py-0.5 rounded-full font-medium border border-[var(--border-color)]">0</span></div>
+                <button onclick="fetchExams()" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 font-medium">⟳ Segarkan</button>
+            </div>
+            <div class="mb-5"><input type="text" id="search-ujian" placeholder="🔍 Cari ujian..." oninput="renderExams()" class="input-custom max-w-md" /></div>
+            <div id="exams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="col-span-full text-center py-20 bg-[var(--bg-input)]/40 border border-[var(--border-color)] rounded-2xl"><p class="text-xs text-[var(--text-muted)]">Memuat bank ujian...</p></div></div>
+        </section>
+
+        <!-- ===== SECTION: RIWAYAT ===== -->
+        <section id="section-riwayat" class="hidden">
+            <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4 mb-4">
+                <h2 class="text-sm font-semibold tracking-wider uppercase text-[var(--text-muted)]">Riwayat & Statistik</h2>
+                <button onclick="renderHistory()" class="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1.5 font-medium">⟳ Segarkan</button>
+            </div>
+            <div id="stats-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
+            <div class="mb-5"><input type="text" id="search-riwayat" placeholder="🔍 Filter riwayat..." oninput="renderHistory()" class="input-custom max-w-md" /></div>
+            <div id="history-list" class="space-y-4"></div>
+        </section>
+    </main>
+
+    <!-- ========== MODAL TULIS ARTIKEL ========== -->
+    <div id="modal-tulis" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[70] flex items-center justify-center p-4 hidden">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-lg rounded-2xl shadow-2xl modal-enter" id="modal-content-tulis">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl"><h3 class="text-md font-semibold text-[var(--text-primary)]">✍️ Mulai Menulis</h3><button onclick="tutupModalTambah()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-4">
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Judul</label><input type="text" id="input-title" placeholder="Judul yang memikat..." class="input-custom" /></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Isi Artikel</label><textarea id="input-content" rows="6" placeholder="Tulis di sini..." class="input-custom resize-none"></textarea></div>
+                <div class="flex justify-end gap-3"><button onclick="tutupModalTambah()" class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--border-color)]/30">Batal</button><button onclick="simpanArtikelBaru()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 active:scale-95 transition-all">Terbitkan</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL BUAT/EDIT UJIAN ========== -->
+    <div id="modal-buat-ujian" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[70] flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-2xl rounded-2xl shadow-2xl my-8 modal-enter" id="modal-content-buat-ujian">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl sticky top-0 z-10"><h3 id="modal-ujian-title" class="text-md font-semibold text-[var(--text-primary)]">📝 Buat Ujian Baru</h3><button onclick="tutupModalUjian()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-4 modal-scroll">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase">Judul</label><input type="text" id="exam-title-input" class="input-custom" /></div>
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase">Durasi (menit)</label><input type="number" id="exam-duration-input" value="30" min="1" max="180" class="input-custom" /></div>
+                </div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase">Deskripsi</label><textarea id="exam-desc-input" rows="2" class="input-custom resize-none"></textarea></div>
+                <div class="border-t border-[var(--border-color)] pt-4"><label class="block text-xs font-semibold text-[var(--text-muted)] mb-3 uppercase">Daftar Soal</label><div id="questions-container" class="space-y-4"></div><button onclick="tambahSoal()" class="mt-4 w-full border-2 border-dashed border-[var(--border-color)] hover:border-emerald-400 text-[var(--text-muted)] hover:text-emerald-400 text-xs font-semibold py-3 rounded-xl transition-all">➕ Tambah Soal</button></div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-[var(--border-color)]"><button onclick="tutupModalUjian()" class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--border-color)]/30">Batal</button><button onclick="simpanUjianOnline()" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/10 active:scale-95 transition-all">Simpan Ujian</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL KERJAKAN UJIAN (FULLSCREEN) ========== -->
+    <div id="modal-kerjakan-ujian" class="fixed inset-0 bg-[var(--bg-base)] z-[80] flex flex-col hidden">
+        <div class="border-b border-[var(--border-color)] bg-[var(--bg-surface)]/90 backdrop-blur-md px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3 min-w-0"><button onclick="konfirmasiKeluarUjian()" class="text-[var(--text-secondary)] hover:text-rose-400 text-sm font-medium">✕ Keluar</button><span class="text-[var(--text-muted)] text-sm">|</span><span id="exam-modal-title" class="text-[var(--text-primary)] font-semibold text-sm truncate max-w-[150px] sm:max-w-sm">Judul</span></div>
+            <div class="flex items-center gap-3 shrink-0"><span id="exam-progress-text" class="text-xs text-[var(--text-muted)]">0/0</span><div id="exam-timer" class="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-full px-4 py-1.5 text-sm font-mono font-bold text-cyan-400 flex items-center gap-1.5">⏱ <span id="timer-display">30:00</span></div></div>
+        </div>
+        <div class="h-1 bg-[var(--bg-input)] shrink-0"><div id="exam-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style="width:0%"></div></div>
+        <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex gap-1.5 mb-6 overflow-x-auto pb-2 flex-wrap" id="question-indicators"></div>
+                <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-6 md:p-8">
+                    <span id="question-number-badge" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 mb-4 inline-block">Soal 1</span>
+                    <h3 id="question-text" class="text-lg md:text-xl text-[var(--text-primary)] font-medium mb-6 leading-relaxed"></h3>
+                    <div id="options-container" class="space-y-3"></div>
+                </div>
+                <div class="flex justify-between items-center mt-6 gap-3">
+                    <button id="btn-prev" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] bg-[var(--bg-input)] border border-[var(--border-color)] hover:bg-[var(--border-color)]/30 disabled:opacity-30 transition-all" onclick="navigasiSoal(-1)">← Sebelumnya</button>
+                    <span id="nav-info" class="text-xs text-[var(--text-muted)]">Soal 1 dari 10</span>
+                    <button id="btn-next" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-md shadow-emerald-500/10 active:scale-95 transition-all" onclick="navigasiSoal(1)">Selanjutnya →</button>
+                </div>
+                <div class="text-center mt-6"><button onclick="submitUjian()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm px-8 py-3 rounded-full shadow-lg shadow-blue-500/15 active:scale-95 transition-all">✅ Kumpulkan Jawaban</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL HASIL UJIAN ========== -->
+    <div id="modal-hasil-ujian" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[90] flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-2xl rounded-2xl shadow-2xl my-8 modal-enter" id="modal-content-hasil">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl"><h3 class="text-md font-semibold text-[var(--text-primary)]">📊 Hasil Ujian</h3><button onclick="tutupModalHasil()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-6 modal-scroll" id="hasil-content"></div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL LOGIN ========== -->
+    <div id="modal-login" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-md rounded-2xl shadow-2xl modal-enter" id="modal-content-login">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl"><h3 class="text-md font-semibold text-[var(--text-primary)]">🔑 Masuk ke EduPulse</h3><button onclick="tutupModalLogin()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-5">
+                <div id="login-pesan" class="hidden text-xs font-medium bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-3 rounded-xl"></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Username</label><input type="text" id="login-username" placeholder="Masukkan username..." class="input-custom" /></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Password</label><div class="input-group-wrapper"><input type="password" id="login-password" placeholder="Masukkan password..." class="input-custom" /><button type="button" class="pw-toggle-btn" onclick="togglePassword('login-password', this)" title="Lihat password"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+                <button onclick="login()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/10 active:scale-95 transition-all">Masuk</button>
+                <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mt-3">
+                    <button onclick="tutupModalLogin(); bukaModalForgotPassword();" class="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2">Lupa Password?</button>
+                    <span>Belum punya akun?</span>
+                </div>
+                <p class="text-center text-xs text-[var(--text-muted)]"><button onclick="tutupModalLogin(); bukaModalRegister();" class="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2">Daftar di sini</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL REGISTER ========== -->
+    <div id="modal-register" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-md rounded-2xl shadow-2xl modal-enter" id="modal-content-register">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl"><h3 class="text-md font-semibold text-[var(--text-primary)]">📝 Daftar Akun Baru</h3><button onclick="tutupModalRegister()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-5">
+                <div id="register-pesan" class="hidden text-xs font-medium bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-3 rounded-xl"></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Username</label><input type="text" id="register-username" placeholder="Min. 3 karakter..." class="input-custom" /></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Email</label><input type="email" id="register-email" placeholder="email@domain.com" class="input-custom" /></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Password</label><div class="input-group-wrapper"><input type="password" id="register-password" placeholder="Min. 6 karakter..." class="input-custom" /><button type="button" class="pw-toggle-btn" onclick="togglePassword('register-password', this)" title="Lihat password"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+                <button onclick="register()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-semibold text-sm py-3 rounded-xl shadow-lg shadow-emerald-500/10 active:scale-95 transition-all">Daftar</button>
+                <p class="text-center text-xs text-[var(--text-muted)]">Sudah punya akun? <button onclick="tutupModalRegister(); bukaModalLogin();" class="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2">Masuk di sini</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL PROFIL ========== -->
+    <div id="modal-profile" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-md rounded-2xl shadow-2xl modal-enter" id="modal-content-profile">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl"><h3 class="text-md font-semibold text-[var(--text-primary)]">👤 Edit Profil</h3><button onclick="closeProfileModal()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-4">
+                <div id="profile-pesan" class="hidden text-xs font-medium bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-3 rounded-xl"></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Username</label><input type="text" id="profile-username" disabled class="input-custom opacity-60 cursor-not-allowed" /></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Nama Lengkap</label><input type="text" id="profile-fullname" placeholder="Nama lengkap" class="input-custom" /></div>
+                <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Email</label><input type="email" id="profile-email" placeholder="Email" class="input-custom" /></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Tanggal Lahir</label><input type="date" id="profile-birthdate" class="input-custom" /></div>
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Jenis Kelamin</label><select id="profile-gender" class="input-custom"><option value="">Pilih...</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option><option value="Lainnya">Lainnya</option></select></div>
+                </div>
+                <div class="flex justify-end gap-3"><button onclick="closeProfileModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--border-color)]/30">Batal</button><button onclick="saveProfileChanges()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 active:scale-95 transition-all">Simpan</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL LUPA PASSWORD ========== -->
+    <div id="modal-forgot-password" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-md rounded-2xl shadow-2xl modal-enter" id="modal-content-forgot">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-input)]/30 rounded-t-2xl"><h3 class="text-md font-semibold text-[var(--text-primary)]" id="forgot-title">🔑 Lupa Password</h3><button onclick="tutupModalForgotPassword()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button></div>
+            <div class="p-6 space-y-4">
+                <div id="forgot-pesan" class="hidden text-xs font-medium bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-3 rounded-xl"></div>
+                <div id="forgot-step-verify">
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Username</label><input type="text" id="forgot-username" placeholder="Username Anda" class="input-custom" /></div>
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Email terdaftar</label><input type="email" id="forgot-email" placeholder="Email Anda" class="input-custom" /></div>
+                    <div class="flex justify-end gap-3"><button onclick="tutupModalForgotPassword()" class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--border-color)]/30">Batal</button><button onclick="verifyForgotPassword()" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/10 active:scale-95 transition-all">Verifikasi</button></div>
+                </div>
+                <div id="forgot-step-reset" class="hidden">
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Password Baru</label><div class="input-group-wrapper"><input type="password" id="forgot-new-password" placeholder="Password baru" class="input-custom" /><button type="button" class="pw-toggle-btn" onclick="togglePassword('forgot-new-password', this)"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+                    <div><label class="block text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Konfirmasi</label><div class="input-group-wrapper"><input type="password" id="forgot-confirm-password" placeholder="Ulangi password" class="input-custom" /><button type="button" class="pw-toggle-btn" onclick="togglePassword('forgot-confirm-password', this)"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+                    <div class="flex justify-end gap-3"><button onclick="tutupModalForgotPassword()" class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--border-color)]/30">Batal</button><button onclick="resetForgotPassword()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 active:scale-95 transition-all">Atur Ulang</button></div>
+                </div>
+                <p class="text-center text-xs text-[var(--text-muted)]">Ingat akun? <button onclick="tutupModalForgotPassword(); bukaModalLogin();" class="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2">Masuk</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL DETAIL ARTIKEL ========== -->
+    <div id="modal-article-detail" class="fixed inset-0 bg-[var(--modal-backdrop)] backdrop-blur-sm z-[75] flex items-center justify-center p-4 hidden">
+        <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-2xl rounded-2xl shadow-2xl modal-enter" id="modal-content-article-detail">
+            <div class="px-6 py-4 border-b border-[var(--border-color)] flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-[var(--bg-input)]/30 rounded-t-2xl">
+                <h3 class="text-md font-semibold text-[var(--text-primary)]">📰 Detail Artikel</h3>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleReadingMode()" class="text-xs font-semibold text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 px-3 py-2 rounded-xl transition-all">📖 Mode Baca</button>
+                    <button onclick="closeArticleDetail()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-2xl leading-none">&times;</button>
+                </div>
+            </div>
+            <div class="p-6 space-y-4 modal-scroll">
+                <div><h2 id="article-detail-title" class="text-2xl font-semibold text-[var(--text-primary)]"></h2><p class="text-xs text-[var(--text-muted)] mt-1" id="article-detail-meta"></p></div>
+                <div id="article-detail-content" class="prose prose-invert text-[var(--text-secondary)] text-sm leading-relaxed max-w-none"></div>
+                <div id="article-detail-comments" data-article-id="" class="space-y-4 mt-6 border-t border-[var(--border-color)] pt-4">
+                    <div class="flex items-center justify-between">
+                        <div><h4 class="text-sm font-semibold text-[var(--text-primary)]">Diskusi</h4><p id="article-comments-count" class="text-xs text-[var(--text-muted)] mt-1">Belum ada komentar.</p></div>
+                        <button onclick="document.getElementById('article-comment-input').focus()" class="text-xs text-cyan-400 hover:text-cyan-300">💬 Beri Komentar</button>
+                    </div>
+                    <div id="article-comments-list" class="space-y-3"></div>
+                    <div class="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">Tulis komentar</p>
+                        <textarea id="article-comment-input" rows="3" placeholder="Tulis pendapat, pertanyaan, atau tanggapan..." class="input-custom resize-none"></textarea>
+                        <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <span class="text-xs text-[var(--text-muted)]">Menulis sebagai <strong id="article-comment-author" class="text-[var(--text-primary)]">Anonim</strong></span>
+                            <div class="flex flex-wrap gap-2">
+                                <button id="article-comment-login-btn" type="button" onclick="promptLoginForArticle(document.getElementById('article-detail-comments')?.dataset.articleId)" class="text-xs text-cyan-400 hover:text-cyan-300">🔑 Masuk</button>
+                                <button type="button" onclick="submitArticleComment()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl active:scale-95 transition-all">Kirim</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TOAST ========== -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[110] border border-[var(--border-color)] rounded-xl px-5 py-3 shadow-2xl text-sm text-[var(--text-primary)] font-medium opacity-0 translate-y-4 pointer-events-none transition-all duration-300 flex items-center gap-2">
+        <span id="toast-icon">✅</span>
+        <span id="toast-message">Pesan</span>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="border-t border-[var(--border-color)] bg-[var(--bg-surface)]/20 py-6 px-6 text-center text-xs text-[var(--text-muted)]">
+        <p>&copy; 2026 EduPulse · Pengalaman membaca & ujian profesional</p>
+    </footer>
+
+    <!-- ================================================================================= -->
+    <!-- ================================= JAVASCRIPT ==================================== -->
+    <!-- ================================================================================= -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ========== KONFIGURASI ==========
+            const BASE_API_URL = "https://lms.agungbarliansaputra.workers.dev/api";
+            const JWT_TOKEN =
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.QMUFsIDTnFmyG3nMiGM6SDlOWk5GTlVSR0Yzd2g3U21xSnAtUXYzMA";
+            const STORAGE_RESULTS = "edupulse_exam_results";
+            const STORAGE_USERS = "edupulse_users";
+            const STORAGE_SESSION = "edupulse_session";
+
+            // ========== STATE ==========
+            window.articlesData = [];
+            window.examsData = [];
+            window.resultsData = [];
+            window.currentUser = null;
+            window.pendingExamId = null;
+            window.pendingArticleId = null;
+            window.editingArticleId = null;
+
+            let activeExam = null;
+            let userAnswers = {};
+            let currentQuestionIndex = 0;
+            let examTimerInterval = null;
+            let examTimeRemaining = 0;
+            let examStartTime = null;
+            let editingExamId = null;
+            let soalSementara = [];
+
+            // ========== THEME ==========
+            function getStoredTheme() {
+                return localStorage.getItem("edupulse_theme") || "dark";
+            }
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem("edupulse_theme", theme);
+                document.getElementById('theme-icon').textContent = theme === 'dark' ? '🌙' : '☀️';
+            }
+
+            function toggleTheme() {
+                const current = document.documentElement.getAttribute('data-theme');
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            }
+            window.setTheme = setTheme;
+            window.toggleTheme = toggleTheme;
+            window.setDarkMode = function(isDark) { setTheme(isDark ? 'dark' : 'light'); };
+            window.setReadingMode = function(enabled) {
+                document.body.classList.toggle('reading-mode', enabled);
+            };
+            window.toggleReadingMode = function() {
+                const detailModal = document.getElementById("modal-article-detail");
+                const isOpen = detailModal && !detailModal.classList.contains("hidden");
+                const isActive = document.body.classList.contains("reading-mode");
+                if (!isActive && !isOpen) {
+                    toast("Buka detail artikel terlebih dahulu untuk Mode Baca.", "ℹ️");
+                    return;
+                }
+                setReadingMode(!isActive);
+            };
+
+            // ========== AUTH HELPERS ==========
+            function getUsers() {
+                try { return JSON.parse(localStorage.getItem(STORAGE_USERS) || "[]"); } catch (e) { return []; }
+            }
+
+            function saveUsers(users) {
+                localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
+            }
+
+            function getSession() {
+                try { return JSON.parse(localStorage.getItem(STORAGE_SESSION) || "null"); } catch (e) { return null; }
+            }
+
+            function saveSession(session) {
+                if (session) localStorage.setItem(STORAGE_SESSION, JSON.stringify(session));
+                else localStorage.removeItem(STORAGE_SESSION);
+            }
+
+            function isLoggedIn() { return window.currentUser !== null; }
+
+            function isAdmin() { return window.currentUser && window.currentUser.isAdmin === true; }
+
+            function initUsers() {
+                let users = getUsers();
+                if (!users.some(u => u.username === "admin")) {
+                    users.push({
+                        id: "user-admin-" + Date.now(),
+                        username: "admin",
+                        password: "123456789",
+                        isAdmin: true,
+                        createdAt: Date.now()
+                    });
+                    saveUsers(users);
+                }
+            }
+
+            function loadSession() {
+                const session = getSession();
+                if (session && session.userId) {
+                    const users = getUsers();
+                    const user = users.find(u => u.id === session.userId);
+                    if (user) {
+                        window.currentUser = {
+                            userId: user.id,
+                            username: user.username,
+                            isAdmin: user.isAdmin,
+                            loginTime: session.loginTime
+                        };
+                        return true;
+                    } else saveSession(null);
+                }
+                window.currentUser = null;
+                return false;
+            }
+
+            // ========== TOAST ==========
+            function toast(msg, icon = "✅") {
+                const el = document.getElementById("toast");
+                document.getElementById("toast-message").textContent = msg;
+                document.getElementById("toast-icon").textContent = icon;
+                el.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
+                el.classList.add("opacity-100", "translate-y-0");
+                clearTimeout(window._toastTid);
+                window._toastTid = setTimeout(() => {
+                    el.classList.add("opacity-0", "translate-y-4", "pointer-events-none");
+                    el.classList.remove("opacity-100", "translate-y-0");
+                }, 2800);
+            }
+            window.toast = toast;
+
+            // ========== UI UPDATE ==========
+            function updateUIForAuth() {
+                const adminBtns = document.getElementById("admin-buttons");
+                const adminRow = document.getElementById("admin-buttons-row");
+                const loggedOut = document.getElementById("auth-buttons-logged-out");
+                const loggedIn = document.getElementById("auth-buttons-logged-in");
+                const usernameDisplay = document.getElementById("username-display-text");
+                const adminBadge = document.getElementById("admin-badge");
+
+                if (window.currentUser) {
+                    loggedOut.classList.add("hidden");
+                    loggedIn.classList.remove("hidden");
+                    usernameDisplay.textContent = window.currentUser.username;
+                    if (window.currentUser.isAdmin) {
+                        adminBtns.classList.remove("hidden");
+                        adminRow.classList.remove("hidden");
+                        adminBadge.classList.remove("hidden");
+                    } else {
+                        adminBtns.classList.add("hidden");
+                        adminRow.classList.add("hidden");
+                        adminBadge.classList.add("hidden");
+                    }
+                } else {
+                    loggedOut.classList.remove("hidden");
+                    loggedIn.classList.add("hidden");
+                    adminBtns.classList.add("hidden");
+                    adminRow.classList.add("hidden");
+                    adminBadge.classList.add("hidden");
+                }
+                updateArticleCommentAuthorLabel();
+                updateBurgerMenuState();
+                // Re-render current tab
+                if (!document.getElementById("section-artikel").classList.contains("hidden")) renderArticles();
+                if (!document.getElementById("section-ujian").classList.contains("hidden")) renderExams();
+                if (!document.getElementById("section-riwayat").classList.contains("hidden")) renderHistory();
+            }
+
+            function updateBurgerMenuState() {
+                const guest = document.getElementById("burger-guest-menu");
+                const user = document.getElementById("burger-user-menu");
+                const userText = document.getElementById("burger-username-text");
+                if (isLoggedIn()) {
+                    guest.classList.add("hidden");
+                    user.classList.remove("hidden");
+                    userText.textContent = window.currentUser.username;
+                } else {
+                    guest.classList.remove("hidden");
+                    user.classList.add("hidden");
+                    userText.textContent = "";
+                }
+            }
+
+            function updateArticleCommentAuthorLabel() {
+                const author = document.getElementById("article-comment-author");
+                const loginBtn = document.getElementById("article-comment-login-btn");
+                if (author) author.textContent = window.currentUser ? window.currentUser.username : "Anonim";
+                if (loginBtn) loginBtn.classList.toggle("hidden", isLoggedIn());
+            }
+
+            // ========== BURGER ==========
+            window.toggleBurgerMenu = function() {
+                const menu = document.getElementById("burger-menu");
+                menu.classList.toggle("open");
+                menu.classList.toggle("hidden");
+            };
+
+            // ========== TAB SWITCHER ==========
+            window.switchTab = function(tab) {
+                const tabs = ['artikel', 'ujian', 'riwayat'];
+                tabs.forEach(t => {
+                    const sec = document.getElementById(`section-${t}`);
+                    const nav = document.getElementById(`nav-${t}`);
+                    const bottom = document.getElementById(`bottom-nav-${t}`);
+                    if (sec) sec.classList.toggle('hidden', t !== tab);
+                    if (nav) nav.dataset.active = (t === tab);
+                    if (bottom) bottom.dataset.active = (t === tab);
+                });
+                if (tab === 'artikel') renderArticles();
+                else if (tab === 'ujian') renderExams();
+                else if (tab === 'riwayat') renderHistory();
+            };
+
+            // ========== MODAL HELPERS ==========
+            function openModal(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.remove('hidden');
+                const content = el.querySelector('.modal-enter');
+                if (content) {
+                    content.classList.remove('modal-enter');
+                    requestAnimationFrame(() => content.classList.add('modal-enter-active'));
+                }
+            }
+
+            function closeModal(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const content = el.querySelector('.modal-enter-active');
+                if (content) {
+                    content.classList.remove('modal-enter-active');
+                    content.classList.add('modal-enter');
+                    setTimeout(() => el.classList.add('hidden'), 250);
+                } else el.classList.add('hidden');
+            }
+
+            // ========== LOGIN / REGISTER / LOGOUT ==========
+            window.bukaModalLogin = function(pesan) {
+                document.getElementById("login-pesan").classList.add("hidden");
+                if (pesan) {
+                    const el = document.getElementById("login-pesan");
+                    el.textContent = pesan;
+                    el.classList.remove("hidden");
+                }
+                document.getElementById("login-username").value = "";
+                document.getElementById("login-password").value = "";
+                openModal('modal-login');
+                setTimeout(() => document.getElementById("login-username").focus(), 300);
+            };
+            window.tutupModalLogin = function() { closeModal('modal-login'); };
+
+            window.bukaModalRegister = function() {
+                document.getElementById("register-pesan").classList.add("hidden");
+                document.getElementById("register-username").value = "";
+                document.getElementById("register-password").value = "";
+                openModal('modal-register');
+                setTimeout(() => document.getElementById("register-username").focus(), 300);
+            };
+            window.tutupModalRegister = function() { closeModal('modal-register'); };
+
+            window.bukaModalForgotPassword = function() {
+                document.getElementById("forgot-pesan").classList.add("hidden");
+                document.getElementById("forgot-step-verify").classList.remove("hidden");
+                document.getElementById("forgot-step-reset").classList.add("hidden");
+                document.getElementById("forgot-title").textContent = "🔑 Lupa Password";
+                document.getElementById("forgot-username").value = "";
+                document.getElementById("forgot-email").value = "";
+                openModal('modal-forgot-password');
+            };
+            window.tutupModalForgotPassword = function() { closeModal('modal-forgot-password'); };
+
+            window.login = function() {
+                const username = document.getElementById("login-username").value.trim();
+                const password = document.getElementById("login-password").value;
+                const pesanEl = document.getElementById("login-pesan");
+                if (!username || !password) {
+                    pesanEl.textContent = "Isi username dan password.";
+                    pesanEl.classList.remove("hidden");
+                    return;
+                }
+                const users = getUsers();
+                const user = users.find(u => u.username === username && u.password === password);
+                if (!user) {
+                    pesanEl.textContent = "Username atau password salah.";
+                    pesanEl.classList.remove("hidden");
+                    return;
+                }
+                pesanEl.classList.add("hidden");
+                window.currentUser = {
+                    userId: user.id,
+                    username: user.username,
+                    isAdmin: user.isAdmin,
+                    loginTime: Date.now()
+                };
+                saveSession(window.currentUser);
+                updateUIForAuth();
+                closeModal('modal-login');
+                toast("Selamat datang, " + user.username + "! 🎉");
+
+                if (window.pendingExamId) {
+                    const eid = window.pendingExamId;
+                    window.pendingExamId = null;
+                    setTimeout(() => mulaiUjian(eid), 400);
+                } else if (window.pendingArticleId) {
+                    const aid = window.pendingArticleId;
+                    window.pendingArticleId = null;
+                    setTimeout(() => openArticleDetail(aid), 400);
+                }
+                fetchArticles();
+                fetchExams();
+                renderHistory();
+            };
+
+            window.register = function() {
+                const username = document.getElementById("register-username").value.trim();
+                const password = document.getElementById("register-password").value;
+                const email = document.getElementById("register-email").value.trim().toLowerCase();
+                const pesanEl = document.getElementById("register-pesan");
+                if (username.length < 3) { pesanEl.textContent = "Username minimal 3 karakter.";
+                    pesanEl.classList.remove("hidden"); return; }
+                if (password.length < 6) { pesanEl.textContent = "Password minimal 6 karakter.";
+                    pesanEl.classList.remove("hidden"); return; }
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { pesanEl.textContent = "Email tidak valid.";
+                    pesanEl.classList.remove("hidden"); return; }
+                const users = getUsers();
+                if (users.find(u => u.username === username)) { pesanEl.textContent = "Username sudah digunakan.";
+                    pesanEl.classList.remove("hidden"); return; }
+                if (users.find(u => u.email === email)) { pesanEl.textContent = "Email sudah digunakan.";
+                    pesanEl.classList.remove("hidden"); return; }
+                const newUser = {
+                    id: "user-" + Date.now() + "-" + Math.random().toString(36).substring(2, 8),
+                    username,
+                    email,
+                    password,
+                    fullName: "",
+                    birthdate: "",
+                    gender: "",
+                    isAdmin: false,
+                    createdAt: Date.now()
+                };
+                users.push(newUser);
+                saveUsers(users);
+                window.currentUser = {
+                    userId: newUser.id,
+                    username: newUser.username,
+                    isAdmin: false,
+                    loginTime: Date.now()
+                };
+                saveSession(window.currentUser);
+                updateUIForAuth();
+                closeModal('modal-register');
+                toast("Akun berhasil dibuat! Selamat datang, " + username + "! 🎉");
+                if (window.pendingExamId) { const eid = window.pendingExamId;
+                    window.pendingExamId = null;
+                    setTimeout(() => mulaiUjian(eid), 400); } else if (window.pendingArticleId) { const aid = window
+                        .pendingArticleId;
+                    window.pendingArticleId = null;
+                    setTimeout(() => openArticleDetail(aid), 400); }
+                fetchArticles();
+                fetchExams();
+                renderHistory();
+            };
+
+            window.logout = function() {
+                if (activeExam) {
+                    if (!confirm("Anda sedang mengerjakan ujian. Yakin keluar?")) return;
+                    tutupFullscreenUjian();
+                }
+                window.currentUser = null;
+                saveSession(null);
+                updateUIForAuth();
+                toast("Anda telah keluar. 👋");
+                fetchArticles();
+                fetchExams();
+                renderHistory();
+            };
+
+            window.togglePassword = function(inputId, btnEl) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const isPassword = input.type === "password";
+                input.type = isPassword ? "text" : "password";
+                const svg = btnEl.querySelector("svg");
+                if (svg) {
+                    if (isPassword) {
+                        svg.innerHTML =
+                            '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>';
+                    } else {
+                        svg.innerHTML =
+                            '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>';
+                    }
+                }
+            };
+
+            // ========== FORGOT PASSWORD ==========
+            window.verifyForgotPassword = function() {
+                const username = document.getElementById("forgot-username").value.trim();
+                const email = document.getElementById("forgot-email").value.trim().toLowerCase();
+                const msg = document.getElementById("forgot-pesan");
+                if (!username || !email) { msg.textContent = "Isi username dan email.";
+                    msg.classList.remove("hidden"); return; }
+                const users = getUsers();
+                const user = users.find(u => u.username === username && u.email === email);
+                if (!user) { msg.textContent = "Username atau email tidak sesuai.";
+                    msg.classList.remove("hidden"); return; }
+                document.getElementById("forgot-step-verify").classList.add("hidden");
+                document.getElementById("forgot-step-reset").classList.remove("hidden");
+                document.getElementById("forgot-title").textContent = "🔐 Atur Ulang Password";
+                msg.classList.add("hidden");
+                window._forgotUserId = user.id;
+            };
+
+            window.resetForgotPassword = function() {
+                const password = document.getElementById("forgot-new-password").value;
+                const confirmPass = document.getElementById("forgot-confirm-password").value;
+                const msg = document.getElementById("forgot-pesan");
+                if (password.length < 6) { msg.textContent = "Password minimal 6 karakter.";
+                    msg.classList.remove("hidden"); return; }
+                if (password !== confirmPass) { msg.textContent = "Konfirmasi password tidak cocok.";
+                    msg.classList.remove("hidden"); return; }
+                const users = getUsers();
+                const user = users.find(u => u.id === window._forgotUserId);
+                if (!user) { msg.textContent = "Akun tidak ditemukan.";
+                    msg.classList.remove("hidden"); return; }
+                user.password = password;
+                saveUsers(users);
+                msg.textContent = "Password berhasil diperbarui. Silakan masuk.";
+                msg.classList.remove("bg-rose-500/10", "border-rose-500/30", "text-rose-400");
+                msg.classList.add("bg-emerald-500/10", "border-emerald-500/30", "text-emerald-400");
+                setTimeout(() => {
+                    closeModal('modal-forgot-password');
+                    bukaModalLogin("Password berhasil diubah. Masuk dengan password baru.");
+                }, 1200);
+                window._forgotUserId = null;
+            };
+
+            // ========== PROFILE ==========
+            window.openProfileModal = function() {
+                if (!isLoggedIn()) return toast("Silakan masuk terlebih dahulu.");
+                const users = getUsers();
+                const user = users.find(u => u.id === window.currentUser.userId);
+                if (!user) return toast("Data tidak ditemukan.");
+                document.getElementById("profile-username").value = user.username;
+                document.getElementById("profile-fullname").value = user.fullName || "";
+                document.getElementById("profile-email").value = user.email || "";
+                document.getElementById("profile-birthdate").value = user.birthdate || "";
+                document.getElementById("profile-gender").value = user.gender || "";
+                document.getElementById("profile-pesan").classList.add("hidden");
+                openModal('modal-profile');
+            };
+            window.closeProfileModal = function() { closeModal('modal-profile'); };
+
+            window.saveProfileChanges = function() {
+                const fullName = document.getElementById("profile-fullname").value.trim();
+                const email = document.getElementById("profile-email").value.trim().toLowerCase();
+                const birthdate = document.getElementById("profile-birthdate").value;
+                const gender = document.getElementById("profile-gender").value;
+                const msg = document.getElementById("profile-pesan");
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    msg.textContent = "Email tidak valid.";
+                    msg.classList.remove("hidden");
+                    return;
+                }
+                const users = getUsers();
+                const existing = users.find(u => u.email === email && u.id !== window.currentUser.userId);
+                if (existing) { msg.textContent = "Email sudah digunakan.";
+                    msg.classList.remove("hidden"); return; }
+                const user = users.find(u => u.id === window.currentUser.userId);
+                if (!user) return toast("Data hilang.");
+                user.fullName = fullName;
+                user.email = email;
+                user.birthdate = birthdate;
+                user.gender = gender;
+                saveUsers(users);
+                msg.textContent = "✅ Profil tersimpan.";
+                msg.classList.remove("hidden", "bg-rose-500/10", "border-rose-500/30", "text-rose-400");
+                msg.classList.add("bg-emerald-500/10", "border-emerald-500/30", "text-emerald-400");
+                setTimeout(() => closeProfileModal(), 1000);
+            };
+
+            // ========== PROFILE DROPDOWN ==========
+            window.toggleProfileDropdown = function() {
+                const dd = document.getElementById("profile-dropdown");
+                dd.classList.toggle("hidden");
+            };
+            document.addEventListener("click", function(e) {
+                const btn = document.querySelector('[onclick*="toggleProfileDropdown"]');
+                const dd = document.getElementById("profile-dropdown");
+                if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) dd.classList.add("hidden");
+            });
+
+            // ========== ARTIKEL ==========
+            async function fetchArticles() {
+                try {
+                    const res = await fetch(`${BASE_API_URL}/articles`, { headers: { Authorization: `Bearer ${JWT_TOKEN}` } });
+                    const json = await res.json();
+                    window.articlesData = (json.success && json.data) ? json.data : [];
+                } catch (e) { window.articlesData = []; }
+                renderArticles();
+            }
+            window.fetchArticles = fetchArticles;
+
+            function renderArticles() {
+                const grid = document.getElementById("articles-grid");
+                const count = document.getElementById("article-count");
+                if (!grid) return;
+                const search = document.getElementById("search-artikel")?.value?.toLowerCase() || "";
+                let data = Array.isArray(window.articlesData) ? window.articlesData : [];
+                if (search) data = data.filter(a => String(a?.title || "").toLowerCase().includes(search) || String(a?.content ||
+                    "").toLowerCase().includes(search));
+                count.textContent = data.length;
+                if (!data.length) {
+                    grid.innerHTML =
+                        `<div class="col-span-full text-center py-16 text-[var(--text-muted)] border border-dashed border-[var(--border-color)] rounded-2xl">📭 ${search ? "Tidak ditemukan." : "Belum ada artikel."}</div>`;
+                    return;
+                }
+                const gradients = ["from-cyan-500 to-blue-600", "from-purple-500 to-indigo-600",
+                    "from-emerald-400 to-teal-600", "from-rose-500 to-orange-500", "from-fuchsia-600 to-pink-500"
+                ];
+                const showDelete = isAdmin();
+                grid.innerHTML = data.map((a, i) => {
+                    const date = a?.created_at ? new Date(a.created_at).toLocaleDateString("id-ID", { day: "numeric",
+                        month: "short", year: "numeric" }) : "Baru";
+                    const grad = gradients[i % gradients.length];
+                    return `<article class="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl overflow-hidden card-hover flex flex-col">
+                                <div class="h-36 w-full bg-gradient-to-br ${grad} relative flex items-center justify-center p-4">
+                                    <span class="text-white font-serif text-3xl font-bold opacity-15 uppercase">${String(a?.title || "Art").substring(0,3)}</span>
+                                    <span class="absolute top-3 left-3 bg-[var(--bg-base)]/80 backdrop-blur-md border border-[var(--border-color)] text-[10px] font-bold uppercase text-cyan-400 px-2.5 py-1 rounded-md">📄 Materi</span>
+                                </div>
+                                <div class="p-5 flex flex-col flex-grow">
+                                    <div class="flex gap-2 text-xs text-[var(--text-muted)] mb-2.5"><span class="font-medium text-[var(--text-secondary)]">${escapeHtml(a?.author || "Writer")}</span><span>•</span><span>${date}</span></div>
+                                    <h3 class="serif-title text-xl text-[var(--text-primary)] font-medium mb-2.5 line-clamp-2 hover:text-cyan-400 transition-colors">${escapeHtml(a?.title || "Tanpa judul")}</h3>
+                                    <p class="text-xs text-[var(--text-muted)] leading-relaxed line-clamp-3 whitespace-pre-line flex-grow">${escapeHtml(a?.content || "")}</p>
+                                </div>
+                                <div class="px-5 pb-5 pt-3 border-t border-[var(--border-color)] flex flex-wrap gap-2 text-xs">
+                                    <button onclick="openArticleDetail('${a?.id || ""}')" class="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-2.5 py-1 rounded-md border border-cyan-500/10 hover:border-cyan-300 transition-all">📖 Detail</button>
+                                    ${showDelete ? `<button onclick="editArtikel('${a?.id || ""}')" class="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/10 hover:border-amber-500/30 transition-all">✏️ Edit</button>` : ''}
+                                    ${showDelete ? `<button onclick="hapusArtikel('${a?.id || ""}')" class="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/10 hover:border-rose-500/30 transition-all">🗑️</button>` : ''}
+                                </div>
+                            </article>`;
+                }).join("");
+            }
+            window.renderArticles = renderArticles;
+
+            window.bukaModalTambah = function() {
+                if (!isAdmin()) return toast("Hanya admin.");
+                if (!window.editingArticleId) {
+                    document.getElementById("input-title").value = "";
+                    document.getElementById("input-content").value = "";
+                    document.querySelector("#modal-content-tulis h3").textContent = "✍️ Mulai Menulis";
+                    document.querySelector("#modal-content-tulis button[onclick='simpanArtikelBaru()']").textContent =
+                        "Terbitkan";
+                }
+                openModal('modal-tulis');
+            };
+            window.tutupModalTambah = function() {
+                window.editingArticleId = null;
+                closeModal('modal-tulis');
+            };
+
+            window.editArtikel = function(id) {
+                if (!isAdmin()) return toast("Hanya admin.");
+                const article = window.articlesData.find(a => a.id === id);
+                if (!article) return toast("Artikel tidak ditemukan.");
+                window.editingArticleId = id;
+                document.getElementById("input-title").value = article.title;
+                document.getElementById("input-content").value = article.content;
+                document.querySelector("#modal-content-tulis h3").textContent = "✏️ Edit Artikel";
+                document.querySelector("#modal-content-tulis button[onclick='simpanArtikelBaru()']").textContent =
+                    "💾 Simpan";
+                openModal('modal-tulis');
+            };
+
+            window.simpanArtikelBaru = async function() {
+                if (!isAdmin()) return toast("Hanya admin.");
+                const title = document.getElementById("input-title").value.trim();
+                const content = document.getElementById("input-content").value.trim();
+                if (!title || !content) return toast("Judul dan isi wajib diisi.");
+                try {
+                    const isEdit = window.editingArticleId !== null;
+                    const url = isEdit ? `${BASE_API_URL}/articles/${window.editingArticleId}` :
+                        `${BASE_API_URL}/articles`;
+                    const method = isEdit ? "PUT" : "POST";
+                    const res = await fetch(url, {
+                        method,
+                        headers: { Authorization: `Bearer ${JWT_TOKEN}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ title, content })
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        window.editingArticleId = null;
+                        document.querySelector("#modal-content-tulis h3").textContent = "✍️ Mulai Menulis";
+                        document.querySelector("#modal-content-tulis button[onclick='simpanArtikelBaru()']").textContent =
+                            "Terbitkan";
+                        closeModal('modal-tulis');
+                        fetchArticles();
+                        toast(isEdit ? "Artikel diperbarui!" : "Artikel terbit!");
+                    } else toast("Gagal: " + json.error);
+                } catch (e) { toast("Gagal terhubung."); }
+            };
+
+            window.hapusArtikel = async function(id) {
+                if (!isAdmin()) return toast("Hanya admin.");
+                if (!confirm("Hapus artikel?")) return;
+                try {
+                    const res = await fetch(`${BASE_API_URL}/articles/${id}`, {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${JWT_TOKEN}` }
+                    });
+                    const json = await res.json();
+                    if (json.success) { fetchArticles();
+                        toast("Artikel dihapus."); } else toast("Gagal: " + json.error);
+                } catch (e) { toast("Gagal menghapus."); }
+            };
+
+            // ========== KOMENTAR ARTIKEL ==========
+            function getArticleComments(articleId) {
+                try {
+                    const stored = JSON.parse(localStorage.getItem("edupulse_article_comments") || "{}");
+                    return Array.isArray(stored[articleId]) ? stored[articleId] : [];
+                } catch (e) { return []; }
+            }
+
+            function saveArticleComments(articleId, comments) {
+                try {
+                    const stored = JSON.parse(localStorage.getItem("edupulse_article_comments") || "{}");
+                    stored[articleId] = comments;
+                    localStorage.setItem("edupulse_article_comments", JSON.stringify(stored));
+                } catch (e) {}
+            }
+
+            function renderArticleComments(articleId) {
+                const comments = getArticleComments(articleId);
+                const list = document.getElementById("article-comments-list");
+                const count = document.getElementById("article-comments-count");
+                if (!list) return;
+                count.textContent = comments.length === 0 ? "Belum ada komentar." : `${comments.length} komentar`;
+                if (!comments.length) { list.innerHTML =
+                    `<div class="text-[var(--text-muted)] text-xs">Belum ada komentar.</div>`; return; }
+                list.innerHTML = comments.map(c => {
+                    const del = isAdmin() ?
+                        `<button onclick="deleteArticleComment('${articleId}','${c.id}')" class="text-[10px] font-semibold text-rose-400 hover:text-rose-300">Hapus</button>` :
+                        "";
+                    return `<div class="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl p-4"><div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between"><div><p class="text-sm text-[var(--text-primary)] font-semibold">${escapeHtml(c.username)}</p><p class="text-[11px] text-[var(--text-muted)] mt-0.5">${new Date(c.timestamp).toLocaleString("id-ID", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}</p></div>${del}</div><p class="text-sm text-[var(--text-secondary)] mt-3 whitespace-pre-line">${escapeHtml(c.comment).replace(/\n/g, '<br>')}</p></div>`;
+                }).join("");
+            }
+
+            window.submitArticleComment = function() {
+                if (!isLoggedIn()) {
+                    const section = document.getElementById("article-detail-comments");
+                    if (section) window.pendingArticleId = section.dataset.articleId;
+                    bukaModalLogin("Silakan masuk untuk berkomentar.");
+                    return;
+                }
+                const section = document.getElementById("article-detail-comments");
+                if (!section) return;
+                const articleId = section.dataset.articleId;
+                if (!articleId) return toast("Artikel tidak ditemukan.");
+                const input = document.getElementById("article-comment-input");
+                const text = input?.value.trim();
+                if (!text) return toast("Tulis komentar terlebih dahulu.");
+                const comments = getArticleComments(articleId);
+                comments.unshift({ id: "comment-" + Date.now(), username: window.currentUser.username, comment: text,
+                    timestamp: Date.now() });
+                saveArticleComments(articleId, comments);
+                input.value = "";
+                renderArticleComments(articleId);
+                toast("Komentar terkirim!");
+            };
+
+            window.deleteArticleComment = function(articleId, commentId) {
+                if (!isAdmin()) return;
+                if (!confirm("Hapus komentar ini?")) return;
+                const comments = getArticleComments(articleId).filter(c => c.id !== commentId);
+                saveArticleComments(articleId, comments);
+                renderArticleComments(articleId);
+                toast("Komentar dihapus.");
+            };
+
+            window.promptLoginForArticle = function(articleId) {
+                if (articleId) window.pendingArticleId = articleId;
+                bukaModalLogin("Silakan masuk untuk berkomentar.");
+            };
+
+            window.openArticleDetail = function(articleIdOrObj) {
+                const article = typeof articleIdOrObj === "string" ? (window.articlesData || []).find(a => a.id ===
+                    articleIdOrObj) : articleIdOrObj;
+                if (!article) return toast("Artikel tidak ditemukan.");
+                document.getElementById("article-detail-title").textContent = article.title || "-";
+                document.getElementById("article-detail-meta").textContent =
+                    `${article.author || "Writer"} • ${article.created_at ? new Date(article.created_at).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" }) : "Baru"}`;
+                document.getElementById("article-detail-content").textContent = article.content || "Tidak ada isi.";
+                const section = document.getElementById("article-detail-comments");
+                if (section) section.dataset.articleId = article.id || "";
+                const input = document.getElementById("article-comment-input");
+                if (input) input.value = "";
+                updateArticleCommentAuthorLabel();
+                renderArticleComments(article.id);
+                openModal('modal-article-detail');
+            };
+            window.closeArticleDetail = function() {
+                setReadingMode(false);
+                closeModal('modal-article-detail');
+            };
+
+            // ========== UJIAN (EXAMS) ==========
+            async function fetchExams() {
+                try {
+                    const res = await fetch(`${BASE_API_URL}/exams`, { headers: { Authorization: `Bearer ${JWT_TOKEN}` } });
+                    const json = await res.json();
+                    window.examsData = (json.success && json.data) ? json.data : [];
+                } catch (e) { window.examsData = []; }
+                renderExams();
+            }
+            window.fetchExams = fetchExams;
+
+            function renderExams() {
+                const grid = document.getElementById("exams-grid");
+                const count = document.getElementById("exam-count");
+                if (!grid) return;
+                const search = document.getElementById("search-ujian")?.value?.toLowerCase() || "";
+                let data = Array.isArray(window.examsData) ? window.examsData : [];
+                if (search) data = data.filter(e => String(e?.title || "").toLowerCase().includes(search));
+                count.textContent = data.length;
+                if (!data.length) {
+                    grid.innerHTML =
+                        `<div class="col-span-full text-center py-16 text-[var(--text-muted)] border border-dashed border-[var(--border-color)] rounded-2xl">📝 ${search ? "Tidak ditemukan." : "Belum ada ujian."}</div>`;
+                    return;
+                }
+                const grads = ["from-emerald-500 to-teal-600", "from-cyan-500 to-blue-600",
+                    "from-purple-500 to-indigo-600", "from-rose-500 to-orange-500", "from-fuchsia-600 to-pink-500"
+                ];
+                const showAdmin = isAdmin();
+                grid.innerHTML = data.map((e, i) => {
+                    const grad = grads[i % grads.length];
+                    const date = e?.created_at ? new Date(e.created_at).toLocaleDateString("id-ID", { day: "numeric",
+                        month: "short", year: "numeric" }) : "Baru";
+                    const qCount = (e?.questions && Array.isArray(e.questions)) ? e.questions.length : 0;
+                    return `<div class="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl overflow-hidden card-hover flex flex-col">
+                                <div class="h-32 w-full bg-gradient-to-br ${grad} relative flex items-center justify-center p-4">
+                                    <span class="text-white font-serif text-4xl font-bold opacity-20 uppercase">${String(e?.title || "Uji").substring(0,3)}</span>
+                                    <span class="absolute top-3 left-3 bg-[var(--bg-base)]/80 backdrop-blur-md border border-[var(--border-color)] text-[10px] font-bold uppercase text-emerald-400 px-2.5 py-1 rounded-md">📝 Ujian</span>
+                                    <span class="absolute bottom-3 right-3 bg-[var(--bg-base)]/80 backdrop-blur-md border border-[var(--border-color)] text-[10px] font-bold text-[var(--text-primary)] px-2.5 py-1 rounded-md">⏱ ${e?.duration || 30} mnt</span>
+                                </div>
+                                <div class="p-5 flex flex-col flex-grow">
+                                    <div class="flex gap-2 text-xs text-[var(--text-muted)] mb-2.5"><span>📅 ${date}</span><span>•</span><span>📋 ${qCount} soal</span></div>
+                                    <h3 class="serif-title text-xl text-[var(--text-primary)] font-medium mb-1.5 line-clamp-2">${escapeHtml(e?.title || "Tanpa judul")}</h3>
+                                    <p class="text-xs text-[var(--text-muted)] line-clamp-2 flex-grow">${escapeHtml(e?.description || "")}</p>
+                                </div>
+                                <div class="px-5 pb-5 pt-3 border-t border-[var(--border-color)] flex flex-wrap gap-2 text-xs">
+                                    <button onclick="handleMulaiUjian('${e?.id || ""}')" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold text-[11px] px-3 py-2 rounded-lg shadow-md active:scale-95 transition-all">🚀 Mulai</button>
+                                    ${showAdmin ? `<button onclick="editUjian('${e?.id || ""}')" class="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-2.5 py-2 rounded-lg border border-cyan-500/10 hover:border-cyan-500/30 transition-all">✏️</button>` : ''}
+                                    ${showAdmin ? `<button onclick="hapusUjianOnline('${e?.id || ""}')" class="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2.5 py-2 rounded-lg border border-rose-500/10 hover:border-rose-500/30 transition-all">🗑️</button>` : ''}
+                                </div>
+                            </div>`;
+                }).join("");
+            }
+            window.renderExams = renderExams;
+
+            // ========== CRUD UJIAN ==========
+            function generateId() { return crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now().toString(36) + "-" +
+                    Math.random().toString(36).substring(2, 8); }
+
+            function buatSoalKosong() { return { id: generateId(), text: "", options: ["", "", "", ""], correctIndex: 0 }; }
+
+            function syncSoalSementaraFromDOM() {
+                const container = document.getElementById("questions-container");
+                if (!container) return;
+                soalSementara = Array.from(container.children).map(card => {
+                    const inputs = Array.from(card.querySelectorAll('input[type="text"]'));
+                    return {
+                        id: card.dataset.questionId || generateId(),
+                        text: inputs[0]?.value || "",
+                        options: inputs.slice(1).map(inp => inp.value || ""),
+                        correctIndex: parseInt(card.querySelectorAll("select")[0]?.value || "0")
+                    };
+                });
+            }
+
+            function renderQuestionsInModal() {
+                const container = document.getElementById("questions-container");
+                container.innerHTML = soalSementara.map((q, idx) => {
+                    const opts = q.options.map((opt, oi) =>
+                        `<div><label class="block text-[11px] font-se
